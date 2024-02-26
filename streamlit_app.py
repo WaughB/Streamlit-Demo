@@ -6,7 +6,7 @@ import pydeck as pdk
 # Function to load data
 def load_data():
     # Load the Excel file
-    df = pd.read_excel("dominos_locations_mock_data.xlsx")
+    df = pd.read_excel("dominos_locations_expanded_mock_data.xlsx")
     return df
 
 
