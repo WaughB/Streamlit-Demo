@@ -91,10 +91,10 @@ def map_visualization_page(df):
     st.title("Map Visualization of Domino's Locations")
 
     # Define filters
-    city = st.multiselect("City", options=sorted(df["City"].unique()), default=None)
-    state = st.multiselect("State", options=sorted(df["State"].unique()), default=None)
+    city = st.multiselect("City", options=sorted(df["City"].unique()), default=[])
+    state = st.multiselect("State", options=sorted(df["State"].unique()), default=[])
     country = st.multiselect(
-        "Country", options=sorted(df["Country"].unique()), default=None
+        "Country", options=sorted(df["Country"].unique()), default=[]
     )
 
     # Apply filters
@@ -106,33 +106,31 @@ def map_visualization_page(df):
     if country:
         filtered_df = filtered_df[filtered_df["Country"].isin(country)]
 
-    # Checkbox to toggle heatmap view
-    heatmap_enabled = st.checkbox("Enable Heatmap")
+    # Displaying a message when no data is available after filtering
+    if filtered_df.empty:
+        st.write("No locations found with the selected filters.")
+        return
 
-    # Map layer setup
-    if heatmap_enabled:
-        # Heatmap layer
-        layer = pdk.Layer(
-            "HeatmapLayer",
-            data=df,
-            get_position=["Longitude", "Latitude"],
-            opacity=0.9,
-            get_weight="Number of Employees",
-        )
-    else:
-        # Scatterplot layer for individual locations
-        layer = pdk.Layer(
-            "ScatterplotLayer",
-            data=df,
-            get_position=["Longitude", "Latitude"],
-            get_color="[200, 30, 0, 160]",
-            get_radius=200,
-            opacity=0.8,
-        )
+    # Display the total number of locations based on the filters
+    total_locations = len(filtered_df)
+    st.write(f"**Total Locations:** {total_locations}")
+
+    # Heatmap layer is always enabled
+    layer = pdk.Layer(
+        "HeatmapLayer",
+        data=filtered_df,
+        get_position=["Longitude", "Latitude"],
+        opacity=0.9,
+        get_weight="Number of Employees",
+        threshold=0.5,
+        radius_pixels=50,
+    )
 
     # PyDeck map
     view_state = pdk.ViewState(
-        latitude=df["Latitude"].mean(), longitude=df["Longitude"].mean(), zoom=1
+        latitude=filtered_df["Latitude"].mean(),
+        longitude=filtered_df["Longitude"].mean(),
+        zoom=4,
     )
     map = pdk.Deck(
         layers=[layer],
